@@ -15,6 +15,7 @@ if st.session_state["trade_saved_success"]:
 
 # --- INPUT UI FIELDS FOR YOUR TRADING RUNS ---
 st.title("🛡️ Avengers Position Monitor Dashboard")
+
 index_name = st.selectbox("Select Index Name", ["NIFTY", "BANKNIFTY", "FINNIFTY"])
 buy_lots = st.number_input("Lots Count", min_value=1, value=3)
 base_multiplier = st.number_input("Lot Size Base Units", min_value=1, value=25)
@@ -35,7 +36,7 @@ if st.button("💾 Append & Save Trade Row to Cloud Google Sheet", use_container
         pnl_status_text = f"🟢 Profit: +₹{combined_net_pnl:,.2f}" if combined_net_pnl >= 0 else f"🔴 Loss: -₹{abs(combined_net_pnl):,.2f}"
         profile_log_summary = f"L1: {leg1_lots}L @ ₹{leg1_price:.1f} | L2: {leg2_lots}L @ ₹{leg2_price:.1f} | L3: {leg3_lots}L @ ₹{leg3_price:.1f}"
         
-        # Formulate correct Indian Standard Time (IST) date marker (without time)
+        # Formulate correct Indian Standard Time (IST) date marker
         ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
         just_date_stamp = ist_time.strftime("%Y-%m-%d")
 
@@ -44,7 +45,11 @@ if st.button("💾 Append & Save Trade Row to Cloud Google Sheet", use_container
             conn = st.connection("gsheets", type=GSheetsConnection)
             existing_df = conn.read(worksheet="Form Responses 1", ttl=0)
             
-            # Formatted exactly to your lowercase columns matching the sheet layout
+            # If the loaded sheet contains an old Timestamp column header, strip it away cleanly
+            if "Timestamp" in existing_df.columns:
+                existing_df = existing_df.drop(columns=["Timestamp"])
+            
+            # Formatted exactly to match your lowercase sheet column framework layout
             new_row_dict = {
                 "date": just_date_stamp,
                 "index": str(index_name),
@@ -59,6 +64,7 @@ if st.button("💾 Append & Save Trade Row to Cloud Google Sheet", use_container
             new_row_df = pd.DataFrame([new_row_dict])
             updated_df = pd.concat([existing_df, new_row_df], ignore_index=True)
             
+            # Push clean data payload directly onto cloud grid matrix tracking layouts
             conn.update(worksheet="Form Responses 1", data=updated_df)
             st.session_state["trade_saved_success"] = True
             st.rerun()
@@ -72,6 +78,11 @@ st.subheader("📋 Cloud Google Sheet Database Live Grid Monitor")
 try:
     live_conn = st.connection("gsheets", type=GSheetsConnection)
     live_df = live_conn.read(worksheet="Form Responses 1", ttl=2)
+    
+    # Ensure view remains cleanly stripped of old Timestamp references dynamically
+    if "Timestamp" in live_df.columns:
+        live_df = live_df.drop(columns=["Timestamp"])
+        
     st.dataframe(live_df, use_container_width=True, height=350)
 except Exception as read_error:
     st.warning(f"Could not render active live preview grid layout: {read_error}")
