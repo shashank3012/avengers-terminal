@@ -17,7 +17,7 @@ LOT_SIZE_MAPPING = {
     "MIDCPNIFTY": 120
 }
 
-# 2. Google Sheets Cloud Sync Engine (Cache disabled via ttl=0 for instant save/read)
+# 2. Google Sheets Cloud Sync Engine
 conn = st.connection("gsheets", type=GSheetsConnection)
 try:
     ledger_df = conn.read(ttl=0)
@@ -173,11 +173,11 @@ with sell_col:
                 st.toast("Trade recorded permanently into cloud sheet database!", icon="☁️")
                 st.rerun()
             except Exception as e:
-                st.error(f"Cloud write sync error: verify database settings inside your Secrets tab panel.")
+                st.error("Cloud write sync error: verify database settings inside your Secrets tab panel.")
     st.markdown("</div>", unsafe_allow_html=True)
 
 # 5. BOTTOM ROW: FULL HISTORICAL DATA SPREADSHEET MONITOR
 st.markdown("---")
 st.subheader("📋 Cloud Google Sheet Database Live Grid Monitor")
 
-if 'ledger_df' in locals() and not ledger_df.empty:
+# Simplified checking layout blocks logic to ensure it can never trigger structural indentation errors
