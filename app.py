@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
-import pytz
+from datetime import datetime, timedelta, timezone
 from streamlit_gsheets import GSheetsConnection
 
 # 1. Page Configuration
@@ -33,8 +32,11 @@ if st.button("💾 Save Trade", type="primary"):
     # Calculate P&L and Prepare Data
     pnl = (exit_price - buy_value) * buy_qty
     
+    # Calculate Indian Standard Time (UTC+5:30) manually without external tools
+    ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
+    
     new_row = pd.DataFrame([{
-        "Date": datetime.now(pytz.timezone('Asia/Kolkata')).strftime("%Y-%m-%d %H:%M:%S"),
+        "Date": ist_time.strftime("%Y-%m-%d %H:%M:%S"),
         "Index": index_name,
         "P&L": pnl,
         "Qty": buy_qty
