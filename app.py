@@ -30,10 +30,11 @@ LOT_SIZE_MAPPING = {
     "MIDCPNIFTY": 120
 }
 
-# 2. Reading Engine via Public Web CSV (TTL=0 disables cloud caching)
+# 2. Reading Engine via Public Web CSV
 CSV_URL = f"https://google.com{SPREADSHEET_ID}/pub?output=csv"
 try:
     ledger_df = pd.read_csv(CSV_URL)
+    # Remove any completely empty blank filler rows
     ledger_df = ledger_df.dropna(how='all')
 except Exception:
     columns = ["Date & Time (IST)", "Index", "Net P&L Status", "Total Lots Bought", "Total Qty", "Buy Premium", "SL Exit Price", "Exit Breakdown Mapping"]
@@ -177,7 +178,6 @@ with sell_col:
                 ENTRY_SL: f"₹{sl_exit_price:.2f}",
                 ENTRY_BREAKDOWN: profile_log_summary
             }
-            # Direct HTTP transmission pushes rows straight into the sheet
             requests.post(FORM_URL, data=form_payload, timeout=5)
             st.toast("Trade recorded permanently to your Google Sheet cloud!", icon="☁️")
             st.rerun()
@@ -187,4 +187,4 @@ with sell_col:
 st.markdown("---")
 st.subheader("📋 Cloud Google Sheet Database Live Grid Monitor")
 
-if 'ledger_df' in locals() and not ledger_df.empty:
+# Displays the table data seamlessly without any complex nested if statement blocks
