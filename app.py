@@ -1,15 +1,14 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-import requests
 
 # 1. Page Configuration Setup
 st.set_page_config(page_title="Avengers Trading Terminal", layout="wide", page_icon="🦸‍♂️")
 st.title("🦸‍♂️ Avengers Trading Command Center")
-st.markdown("Global cloud derivative hub linked securely to your Google Sheet.")
+st.markdown("Global cloud derivative hub with automated lot mapping and 3-leg partial scale-out matrix.")
 
-# ⚠️ PASTE YOUR GOOGLE WEB APP URL LINK HERE BETWEEN THE QUOTES
-WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwlZ3lf-yPx9nPxmwOdryioCvLwRsd2lgYwu81qrsbYpBkDsnW1aJTTvuv8xUZSAywN/exec"
+# 🟢 HARDCODE YOUR NEW SHEET LINK ID HERE TO BYPASS CONNECTION FIREWALLS
+SPREADSHEET_ID = "1jQyL9uLBFuTI8OxYBK8YaLwr3ZUpUJtNpKcyDR_vkqA"
 
 # Official 2026 Lot Size Configurations
 LOT_SIZE_MAPPING = {
@@ -20,17 +19,14 @@ LOT_SIZE_MAPPING = {
     "MIDCPNIFTY": 120
 }
 
-# 2. Fetch Data from Google Sheets via Web App API Pipeline
+# 2. Raw Web Request Data Fetch Engine (Bypasses Extension tools entirely)
+CSV_URL = f"https://google.com{SPREADSHEET_ID}/pub?output=csv"
 try:
-    response = requests.get(WEB_APP_URL, timeout=5)
-    if response.status_code == 200:
-        raw_data = response.json()
-        ledger_df = pd.DataFrame(raw_data[1:], columns=raw_data[0])
-    else:
-        ledger_df = pd.DataFrame()
+    st.session_state.ledger_df = pd.read_csv(CSV_URL)
 except Exception:
-    columns = ["Date & Time (IST)", "Index", "Net P&L Status", "Total Lots Bought", "Total Qty", "Buy Premium", "SL Exit Price", "Exit Breakdown Mapping"]
-    ledger_df = pd.DataFrame(columns=columns)
+    if "ledger_df" not in st.session_state:
+        columns = ["Date & Time (IST)", "Index", "Net P&L Status", "Total Lots Bought", "Total Qty", "Buy Premium", "SL Exit Price", "Exit Breakdown Mapping"]
+        st.session_state.ledger_df = pd.DataFrame(columns=columns)
 
 # 3. GLOBAL ASSET SELECTION HEADER BAR
 index_name = st.selectbox("Select Active Index Asset", list(LOT_SIZE_MAPPING.keys()))
@@ -150,11 +146,9 @@ with sell_col:
     with sc_2:
         st.metric(label="💰 Combined Position Net P&L", value=f"₹{combined_net_pnl:,.2f}")
         
-    if st.button("💾 Append & Save Trade Row to Cloud Google Sheet", use_container_width=True, type="primary"):
+    if st.button("💾 Append & Save Trade Row to Local Screen", use_container_width=True, type="primary"):
         if total_lots_allocated == 0:
             st.error("Cannot log a trade with zero allocated lots.")
-        elif WEB_APP_URL == "PASTE_YOUR_COPIED_WEB_APP_URL_HERE":
-            st.error("Please add your deployment URL link in your GitHub script line 11.")
         else:
             pnl_status_text = f"🟢 Profit: +₹{combined_net_pnl:,.2f}" if combined_net_pnl >= 0 else f"🔴 Loss: -₹{abs(combined_net_pnl):,.2f}"
             profile_log_summary = f"L1: {leg1_lots}L @ ₹{leg1_price:.1f} | L2: {leg2_lots}L @ ₹{leg2_price:.1f} | L3: {leg3_lots}L @ ₹{leg3_price:.1f}"
@@ -162,28 +156,27 @@ with sell_col:
             ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
             current_timestamp = ist_time.strftime("%Y-%m-%d %H:%M:%S")
 
-            payload = {
-                "date": current_timestamp,
-                "index": index_name,
-                "pnl": pnl_status_text,
-                "lots": int(buy_lots),
-                "qty": int(total_lots_allocated * base_multiplier),
-                "buy": f"₹{buy_value:.2f}",
-                "sl": f"₹{sl_exit_price:.2f}",
-                "breakdown": profile_log_summary
+            new_row = {
+                "Date & Time (IST)": current_timestamp,
+                "Index": index_name,
+                "Net P&L Status": pnl_status_text,
+                "Total Lots Bought": int(buy_lots),
+                "Total Qty": int(total_lots_allocated * base_multiplier),
+                "Buy Premium": f"₹{buy_value:.2f}",
+                "SL Exit Price": f"₹{sl_exit_price:.2f}",
+                "Exit Breakdown Mapping": profile_log_summary
             }
             
-            try:
-                requests.post(WEB_APP_URL, data=payload, timeout=5)
-                st.toast("Trade recorded permanently into cloud sheet database!", icon="☁️")
-                st.rerun()
-            except Exception:
-                st.error("Network upload error. Verify Web App API is deployed correctly.")
+            st.session_state.ledger_df = pd.concat([st.session_state.ledger_df, pd.DataFrame([new_row])], ignore_index=True)
+            st.toast("Trade recorded instantly to session screen memory!", icon="🚀")
+            st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
 # 5. BOTTOM ROW: FULL HISTORICAL DATA SPREADSHEET MONITOR
 st.markdown("---")
-st.subheader("📋 Cloud Google Sheet Database Live Grid Monitor")
+st.subheader("📋 Live Session Ledger Monitor")
 
-if 'ledger_df' in locals() and not ledger_df.empty:
-    st.dataframe(ledger_df, use_container_width=True, hide_index=True, height=400)
+if not st.session_state.ledger_df.empty:
+    st.dataframe(st.session_state.ledger_df, use_container_width=True, hide_index=True, height=400)
+else:
+    st.info("The screen ledger is currently empty. Click save above to log rows instantly inside your dashboard viewport.")
