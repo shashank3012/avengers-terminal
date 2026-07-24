@@ -36,15 +36,32 @@ trade_col1, trade_col2 = st.columns(2)
 with trade_col1:
     st.markdown("#### 📥 Buy Side Entry Parameters")
     
+    # 🎯 INDEX SELECTOR
     index_name = st.selectbox("Select Index Name", ["NIFTY", "BANKNIFTY", "FINNIFTY", "SENSEX"])
+    
+    # 🎯 AUTOMATIC CORRECT LOT SIZE TRACKING ENGINE
+    # Automatically selects correct regulatory base multiples based on selection
+    if index_name == "NIFTY":
+        default_multiplier = 65
+    elif index_name == "SENSEX":
+        default_multiplier = 20
+    elif index_name == "BANKNIFTY":
+        default_multiplier = 30
+    elif index_name == "FINNIFTY":
+        default_multiplier = 60
+    else:
+        default_multiplier = 25
+        
     buy_lots = st.number_input("Lots Count", min_value=1, value=3, step=1)
-    base_multiplier = st.number_input("Lot Size Base Units", min_value=1, value=25, step=5)
+    
+    # Renders the exact correct multiplier dynamically while letting you adjust if needed
+    base_multiplier = st.number_input("Lot Size Base Units", min_value=1, value=default_multiplier, step=5)
     buy_value = st.number_input("Average Buy Entry Price (₹)", min_value=0.0, value=135.50, step=0.5, format="%.2f")
     
     st.caption("Enter your baseline entry premium cost average.")
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 🎯 RESTORED TARGET CARDS (Right beneath your entry price)
+    # TARGET CARDS
     t25 = buy_value * 1.25
     t40 = buy_value * 1.40
     t50 = buy_value * 1.50
