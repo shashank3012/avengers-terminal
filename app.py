@@ -4,7 +4,7 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 
 # ----------------------------------------------------
-# 1. INITIAL SETUP & APP SETTINGS
+# 1. INITIAL SETUP & SYSTEM SETTINGS
 # ----------------------------------------------------
 st.set_page_config(
     page_title="Avengers Position Monitor Dashboard",
@@ -22,41 +22,33 @@ if st.session_state["trade_saved_success"]:
 
 
 # ----------------------------------------------------
-# 2. MAIN HEADER & BASE PARAMETERS
+# 2. MAIN APP TITLE HEADER
 # ----------------------------------------------------
 st.markdown("## 🛡️ Avengers Position Monitor Dashboard")
-
-# Core operational widgets split at the top header area
-header_col1, header_col2, header_col3 = st.columns(3)
-with header_col1:
-    index_name = st.selectbox("Select Index Name", ["NIFTY", "BANKNIFTY", "FINNIFTY", "SENSEX"])
-with header_col2:
-    buy_lots = st.number_input("Lots Count", min_value=1, value=3, step=1)
-with header_col3:
-    base_multiplier = st.number_input("Lot Size Base Units", min_value=1, value=25, step=5)
-
-# Calculate your total trading units dynamically
-total_lots_allocated = buy_lots
-total_quantity = int(total_lots_allocated * base_multiplier)
-
-st.markdown("---")
+st.markdown("<br>", unsafe_allow_html=True)
 
 
 # ----------------------------------------------------
-# 3. ORIGINAL SIDE-BY-SIDE INTERFACE: BUY VS. SELL SIDE
+# 3. ORIGINAL TWO-COLUMN SETUP: BUY VS. SELL SIDE
 # ----------------------------------------------------
-# Re-establishing your original horizontal tracking structural split columns
+# This forces the layout back into your true horizontal split columns
 trade_col1, trade_col2 = st.columns(2)
 
 with trade_col1:
     st.markdown("#### 📥 Buy Side Entry Parameters")
+    
+    # 🎯 ALL ORIGINAL BUY SIDE FIELDS PUT BACK EXACTLY WHERE THEY BELONG:
+    index_name = st.selectbox("Select Index Name", ["NIFTY", "BANKNIFTY", "FINNIFTY", "SENSEX"])
+    buy_lots = st.number_input("Lots Count", min_value=1, value=3, step=1)
+    base_multiplier = st.number_input("Lot Size Base Units", min_value=1, value=25, step=5)
     buy_value = st.number_input("Average Buy Entry Price (₹)", min_value=0.0, value=135.50, step=0.5, format="%.2f")
+    
     st.caption("Enter your baseline entry premium cost average.")
 
 with trade_col2:
     st.markdown("#### 📤 Sell Side Target Parameters (3 Legs)")
     
-    # Nested configurations inside your sell panel column to define target metrics
+    # Side-by-side splits inside the Sell column for clean Leg inputs
     leg_ui_col1, leg_ui_col2 = st.columns(2)
     
     with leg_ui_col1:
@@ -77,18 +69,19 @@ with trade_col2:
 
 
 # ----------------------------------------------------
-# 4. MATHS ENGINE: DYNAMIC PERFORMANCE COMPUTATION
+# 4. MATH ENGINE: AUTOMATIC POSITION CALCULATIONS
 # ----------------------------------------------------
-# Math metrics calculated automatically based on your real UI inputs above
+total_lots_allocated = buy_lots
+total_quantity = int(total_lots_allocated * base_multiplier)
 total_sell_lots = leg1_lots + leg2_lots + leg3_lots
 
 if total_sell_lots > 0:
-    # Weighted average calculation engine for overall selling execution rate
+    # Calculate the blended average sell price based on your multi-leg targets
     average_sell_price = ((leg1_lots * leg1_price) + (leg2_lots * leg2_price) + (leg3_lots * leg3_price)) / total_sell_lots
 else:
     average_sell_price = 0.0
 
-# Computing final net P&L based on true position sizes matching option parameters
+# Computing final net P&L completely dynamically using your live values
 total_cost_basis = total_sell_lots * base_multiplier * buy_value
 total_revenue_basis = total_sell_lots * base_multiplier * average_sell_price
 combined_net_pnl = total_revenue_basis - total_cost_basis
@@ -123,7 +116,7 @@ with metric_col2:
     # Submission button triggers validation checks and database uploads
     if st.button("💾 Append & Save Trade Row to Cloud Google Sheet", use_container_width=True, type="primary"):
         if total_sell_lots != total_lots_allocated:
-            st.error(f"Allocation Mismatch: Your leg lots summary ({total_sell_lots}) must equal total lots input ({total_lots_allocated}).")
+            st.error(f"Allocation Mismatch: Your leg lots summary ({total_sell_lots}) must equal your main Lots Count ({total_lots_allocated}).")
         else:
             pnl_status_text = f"🟢 Profit: +₹{combined_net_pnl:,.2f}" if combined_net_pnl >= 0 else f"🔴 Loss: -₹{abs(combined_net_pnl):,.2f}"
             profile_log_summary = f"L1: {leg1_lots}L @ ₹{leg1_price:.1f} | L2: {leg2_lots}L @ ₹{leg2_price:.1f} | L3: {leg3_lots}L @ ₹{leg3_price:.1f}"
