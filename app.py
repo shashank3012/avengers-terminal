@@ -154,7 +154,9 @@ with metric_col2:
 
             # 🎯 DIRECT LINK APPROACH: Directly editing via the Google Apps Script Webhook pipeline 
             # This directly appends to your exact columns (Date, Index, pnl, lots, qty, buy, sl, breakdown)
-            WEBHOOK_URL = "https://google.com"
+            # 🎯 FIXED: Points straight to your unique Google Apps Script macro tunnel
+            WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwz3qk16sYlMA22f6YlcEIyQxmPaYVeWUWWBz0lKLnDUSY9_29Z82190nw83LdoUllO0g/exec"
+
             
             trade_payload = {
                 "Date": just_date_stamp,
