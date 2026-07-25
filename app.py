@@ -150,6 +150,9 @@ with metric_col2:
     with action_col2:
         clear_btn = st.button("🗑️ Clear Sheet Data", use_container_width=True, type="secondary")
         
+    # Standard Webhook URL for both save and clear events
+    WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwz3qk16sYlMA22f6YlcEIyQxmPaYVeWUWWBz0lKLnDUSY9_29Z82190nw83LdoUllO0g/exec"
+
     # --- SAVE TO SHEET INTERFACE ENGINE ---
     if commit_btn:
         if total_sell_lots != total_lots_allocated:
@@ -160,12 +163,10 @@ with metric_col2:
             
             ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
             just_date_stamp = ist_time.strftime("%Y-%m-%d")
-
-            # Google Apps Script Webhook pipeline 
-            WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwz3qk16sYlMA22f6YlcEIyQxmPaYVeWUWWBz0lKLnDUSY9_29Z82190nw83LdoUllO0g/exec"
             
             # Map request params matching your Google Apps Script properties engine expectations
             payload = {
+                "action": "save",
                 "date": just_date_stamp,
                 "index": index_name,
                 "pnl": float(combined_net_pnl),
@@ -191,21 +192,17 @@ with metric_col2:
     # --- WIPE / CLEAR WORKSHEET ENGINE ---
     if clear_btn:
         try:
-            # Connect directly via native gsheets layer definitions
-            conn = st.connection("gsheets", type=GSheetsConnection)
+            # Deliver a structured clearing flag payload over an HTTP POST request 
+            response = requests.post(WEBHOOK_URL, json={"action": "clear"}, timeout=15)
             
-            # Create a clean dataframe schema block mimicking your exact columns to clear tracking logs rows safely
-            clean_schema_df = pd.DataFrame(columns=[
-                "Date", "Index", "pnl", "lots", "qty", "buy", "sl", "breakdown"
-            ])
-            
-            # Flush existing spreadsheet contents instantly by writing empty header layouts
-            conn.update(worksheet="Trades", data=clean_schema_df)
-            
-            # Force downstream components to bypass caching models 
-            st.cache_data.clear()
-            st.toast("🧹 Sheet data records wiped clean! Ready for new entries.", icon="ℹ️")
-            st.rerun()
-            
+            # Check for a valid execution response back from your App Script server
+            if response.status_code == 200 or "success" in response.text.lower():
+                # Force local application state to drop stale views
+                st.cache_data.clear()
+                st.toast("🧹 Sheet data records wiped clean! Ready for new entries.", icon="ℹ️")
+                st.rerun()
+            else:
+                st.error(f"Web App clearing engine failed. Server response: {response.text}")
+                
         except Exception as e:
-            st.error(f"Database reset action failed: {e}. Check if worksheet name matches 'Trades' exactly.")
+            st.error(f"Failed transmission over the automated webhook clearing pipeline: {e}")
