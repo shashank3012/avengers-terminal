@@ -153,7 +153,7 @@ with metric_col2:
             ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
             just_date_stamp = ist_time.strftime("%Y-%m-%d")
 
-            # 🎯 FIXED PATH DESTINATION URL
+            # FIXED PATH DESTINATION URL
             RESPONSE_URL = "https://google.com"
             
             # ⚠️ MANDATORY REMINDER: Replace these entry codes with your real Google Form field entry numbers
@@ -174,7 +174,6 @@ with metric_col2:
                 
                 if response.status_code == 200:
                     st.session_state["trade_saved_success"] = True
-                    st.topic_sync = True
                     st.rerun()
                 else:
                     st.error(f"Google Form rejected data submission routing. Server Error Code: {response.status_code}")
@@ -199,3 +198,4 @@ try:
         
     st.dataframe(live_df, use_container_width=True, height=350)
 except Exception as read_error:
+    st.warning(f"Could not render active live preview grid layout: {read_error}")
