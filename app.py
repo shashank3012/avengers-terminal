@@ -150,8 +150,9 @@ with metric_col2:
     with action_col2:
         clear_btn = st.button("🗑️ Clear Sheet Data", use_container_width=True, type="secondary")
         
-    # Fixed direct transmission macro tunnel endpoint
-    WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzO0qab0Mw-eM-hGeiVs4ImXUgYIHyOhC8tRIditY42Y6Bg3Ey2EiHGsXe9RoNuzDxWbA/exec"
+    # ⚠️ CRITICAL: Replace this string with your BRAND NEW Web App URL generated from the Apps Script window!
+    # Ensure it ends with '/exec', NOT '/edit'
+    WEBHOOK_URL = "https://google.com"
 
     # --- SAVE TO SHEET INTERFACE ENGINE ---
     if commit_btn:
@@ -163,7 +164,6 @@ with metric_col2:
             ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
             just_date_stamp = ist_time.strftime("%Y-%m-%d")
             
-            # Formulate structured JSON payload matching the macro properties key engine exactly
             payload = {
                 "action": "save",
                 "date": just_date_stamp,
@@ -177,31 +177,29 @@ with metric_col2:
             }
             
             try:
-                # Dispatches transaction payload seamlessly to the cloud macro
-                response = requests.post(WEBHOOK_URL, json=payload, timeout=10)
+                # Dispatches transaction payload seamlessly with redirect permission enabled
+                response = requests.post(WEBHOOK_URL, json=payload, allow_redirects=True, timeout=15)
                 if response.status_code == 200 or "success" in response.text.lower():
                     st.session_state["trade_saved_success"] = True
                     st.cache_data.clear()
                     st.rerun()
                 else:
-                    st.error(f"Web App responded with an error text sequence: {response.text}")
+                    st.error(f"Web App error code {response.status_code}. Response text summary: {response.text[:200]}")
             except Exception as e:
                 st.error(f"Failed transmission over the automated webhook pipeline: {e}")
 
     # --- WIPE / CLEAR WORKSHEET ENGINE ---
     if clear_btn:
         try:
-            # Deliver a structured clearing flag payload over an HTTP POST request to bypass read-only locks
-            response = requests.post(WEBHOOK_URL, json={"action": "clear"}, timeout=15)
+            # Deliver clearing payload over an HTTP POST request allowing structural redirection handling
+            response = requests.post(WEBHOOK_URL, json={"action": "clear"}, allow_redirects=True, timeout=15)
             
-            # Check for a valid execution response back from your Apps Script server
             if response.status_code == 200 or "success" in response.text.lower():
-                # Force local application state to drop stale views
                 st.cache_data.clear()
                 st.toast("🧹 Sheet data records wiped clean! Ready for new entries.", icon="ℹ️")
                 st.rerun()
             else:
-                st.error(f"Web App clearing engine failed. Server response: {response.text}")
+                st.error(f"Web App clearing engine failed. Code: {response.status_code}. Details: {response.text[:200]}")
                 
         except Exception as e:
             st.error(f"Failed transmission over the automated webhook clearing pipeline: {e}")
