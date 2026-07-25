@@ -156,8 +156,8 @@ with metric_col2:
             try:
                 conn = st.connection("gsheets", type=GSheetsConnection)
                 
-                # 🎯 FIXED: Encoded "%20" to handle sheet title spaces safely
-                existing_df = conn.read(worksheet="Form%20Responses%201", ttl=0)
+                # 🎯 FIXED: Omit explicit name labels. Target sheet position index 0 directly.
+                existing_df = conn.read(ttl=0)
                 
                 if "Timestamp" in existing_df.columns:
                     existing_df = existing_df.drop(columns=["Timestamp"])
@@ -176,8 +176,8 @@ with metric_col2:
                 new_row_df = pd.DataFrame([new_row_dict])
                 updated_df = pd.concat([existing_df, new_row_df], ignore_index=True)
                 
-                # 🎯 FIXED: Encoded "%20" here as well
-                conn.update(worksheet="Form%20Responses%201", data=updated_df)
+                # 🎯 FIXED: Let the system overwrite the raw dataframe directly without names
+                conn.update(data=updated_df)
                 st.session_state["trade_saved_success"] = True
                 st.rerun()
                 
@@ -194,8 +194,8 @@ st.markdown("#### 📋 Cloud Google Sheet Database Live Grid Monitor")
 try:
     live_conn = st.connection("gsheets", type=GSheetsConnection)
     
-    # 🎯 FIXED: Encoded "%20" for clear grid alignment data pull
-    live_df = live_conn.read(worksheet="Form%20Responses%201", ttl=2)
+    # 🎯 FIXED: Pulls index 0 without passing custom worksheet names
+    live_df = live_conn.read(ttl=2)
     
     if "Timestamp" in live_df.columns:
         live_df = live_df.drop(columns=["Timestamp"])
