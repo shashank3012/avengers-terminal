@@ -1,5 +1,6 @@
 from datetime import datetime, timezone, timedelta
 import pandas as pd
+import requests
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 
@@ -12,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Flash status notification parameters on page load cycles
+# Initialize and track success alerts across page refreshes
 if "trade_saved_success" not in st.session_state:
     st.session_state["trade_saved_success"] = False
 
@@ -52,8 +53,6 @@ with trade_col1:
         default_multiplier = 25
         
     buy_lots = st.number_input("Lots Count", min_value=1, value=3, step=1)
-    
-    # Renders the exact correct multiplier dynamically while letting you adjust if needed
     base_multiplier = st.number_input("Lot Size Base Units", min_value=1, value=default_multiplier, step=5)
     buy_value = st.number_input("Average Buy Entry Price (₹)", min_value=0.0, value=135.50, step=0.5, format="%.2f")
     
@@ -83,7 +82,6 @@ with trade_col2:
     st.markdown("#### 📤 Sell Side Target Parameters (3 Legs)")
     
     leg_ui_col1, leg_ui_col2 = st.columns(2)
-    
     with leg_ui_col1:
         st.markdown("**Lot Allocation per Leg**")
         leg1_lots = st.number_input("Leg 1: Lots", min_value=0, value=1, step=1)
@@ -118,7 +116,7 @@ combined_net_pnl = total_revenue_basis - total_cost_basis
 
 
 # ----------------------------------------------------
-# 5. SUMMARY REALIZATION PANELS & CLOUD SUBMISSION
+# 5. SUMMARY REALIZATION PANELS & FORM SUBMISSION
 # ----------------------------------------------------
 st.markdown("<br>", unsafe_allow_html=True)
 metric_col1, metric_col2 = st.columns([1.2, 1.0])
@@ -153,36 +151,32 @@ with metric_col2:
             ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
             just_date_stamp = ist_time.strftime("%Y-%m-%d")
 
+            # 🎯 BYPASS METHOD: Submit through your live Google Form endpoint instead of direct sheet link
+            FORM_URL = "https://google.com"
+            RESPONSE_URL = FORM_URL.replace("/viewform", "/formResponse")
+            
+            # ⚠️ MANDATORY: You must replace these dummy keys below with your actual form entry IDs!
+            form_payload = {
+                "entry.111111111": just_date_stamp,      # Replace with your Date field ID
+                "entry.222222222": str(index_name),     # Replace with your Index field ID
+                "entry.333333333": str(pnl_status_text), # Replace with your PNL field ID
+                "entry.444444444": int(buy_lots),        # Replace with your Lots field ID
+                "entry.555555555": int(total_quantity),  # Replace with your Qty field ID
+                "entry.666666666": f"₹{buy_value:.2f}",   # Replace with your Buy Price field ID
+                "entry.777777777": f"₹{sl_exit_price:.2f}",# Replace with your Stop Loss field ID
+                "entry.888888888": str(profile_log_summary) # Replace with your Breakdown field ID
+            }
+
             try:
-                conn = st.connection("gsheets", type=GSheetsConnection)
-                
-                # 🎯 FIXED: Omit explicit name labels. Target sheet position index 0 directly.
-                existing_df = conn.read(ttl=0)
-                
-                if "Timestamp" in existing_df.columns:
-                    existing_df = existing_df.drop(columns=["Timestamp"])
-                
-                new_row_dict = {
-                    "date": just_date_stamp,
-                    "index": str(index_name),
-                    "pnl": str(pnl_status_text),
-                    "lots": int(buy_lots),
-                    "quantity": int(total_quantity),
-                    "buy": f"₹{buy_value:.2f}",
-                    "sl": f"₹{sl_exit_price:.2f}",
-                    "breakdown": str(profile_log_summary)
-                }
-                
-                new_row_df = pd.DataFrame([new_row_dict])
-                updated_df = pd.concat([existing_df, new_row_df], ignore_index=True)
-                
-                # 🎯 FIXED: Let the system overwrite the raw dataframe directly without names
-                conn.update(data=updated_df)
-                st.session_state["trade_saved_success"] = True
-                st.rerun()
-                
-            except Exception as database_error:
-                st.error(f"Spreadsheet Link Blocked: {database_error}")
+                # Dispatches raw text parameters safely via public submission form gates
+                response = requests.post(RESPONSE_URL, data=form_payload, timeout=5)
+                if response.status_code == 200:
+                    st.session_state["trade_saved_success"] = True
+                    st.rerun()
+                else:
+                    st.error(f"Google Form rejected the submission. HTTP Code: {response.status_code}")
+            except Exception as append_error:
+                st.error(f"Network error trying to submit to Google Form: {append_error}")
 
 
 # ----------------------------------------------------
@@ -192,9 +186,8 @@ st.markdown("---")
 st.markdown("#### 📋 Cloud Google Sheet Database Live Grid Monitor")
 
 try:
+    # Public tracking reader engine (reading data works perfectly with your link!)
     live_conn = st.connection("gsheets", type=GSheetsConnection)
-    
-    # 🎯 FIXED: Pulls index 0 without passing custom worksheet names
     live_df = live_conn.read(ttl=2)
     
     if "Timestamp" in live_df.columns:
