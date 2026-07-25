@@ -152,7 +152,7 @@ with metric_col2:
             just_date_stamp = ist_time.strftime("%Y-%m-%d")
 
             # 🎯 BYPASS METHOD: Submit through your live Google Form endpoint instead of direct sheet link
-            FORM_URL = "https://google.com"
+            FORM_URL = "https://docs.google.com/spreadsheets/d/1jQyL9uLBFuTI8OxYBK8YaLwr3ZUpUJtNpKcyDR_vkqA/edit/"
             RESPONSE_URL = FORM_URL.replace("/viewform", "/formResponse")
             
             # ⚠️ MANDATORY: You must replace these dummy keys below with your actual form entry IDs!
