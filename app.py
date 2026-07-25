@@ -25,7 +25,7 @@ if st.session_state["trade_saved_success"]:
 # ----------------------------------------------------
 # 2. MAIN DASHBOARD VISUAL HEADER
 # ----------------------------------------------------
-st.markdown("## 🛡️ Avengers Position Monitor Dashboard")
+st.markdown("## 🛡️ Trading Database")
 st.markdown("<br>", unsafe_allow_html=True)
 
 
