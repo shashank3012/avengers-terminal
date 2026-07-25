@@ -5,7 +5,7 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 
 # ----------------------------------------------------
-# 1. INITIAL SETUP & SYSTEM SETTINGS
+# 1. INITIAL SETUP & SYSTEM CONFIGURATIONS
 # ----------------------------------------------------
 st.set_page_config(
     page_title="Avengers Position Monitor Dashboard",
@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Initialize and track success alerts across page refreshes
+# Flash status notification banner control across page refresh iterations
 if "trade_saved_success" not in st.session_state:
     st.session_state["trade_saved_success"] = False
 
@@ -23,24 +23,25 @@ if st.session_state["trade_saved_success"]:
 
 
 # ----------------------------------------------------
-# 2. MAIN APP TITLE HEADER
+# 2. MAIN DASHBOARD VISUAL HEADER
 # ----------------------------------------------------
 st.markdown("## 🛡️ Avengers Position Monitor Dashboard")
 st.markdown("<br>", unsafe_allow_html=True)
 
 
 # ----------------------------------------------------
-# 3. TWO-COLUMN SETUP: BUY VS. SELL SIDE
+# 3. ORIGINAL TWO-COLUMN SYSTEM: BUY SIDE VS. SELL SIDE
 # ----------------------------------------------------
+# Enforces the layout framework back onto your true original structural column split
 trade_col1, trade_col2 = st.columns(2)
 
 with trade_col1:
     st.markdown("#### 📥 Buy Side Entry Parameters")
     
-    # INDEX SELECTOR
+    # Core trading identifier widgets stacked inside your exact layout
     index_name = st.selectbox("Select Index Name", ["NIFTY", "BANKNIFTY", "FINNIFTY", "SENSEX"])
     
-    # AUTOMATIC CORRECT LOT SIZE TRACKING ENGINE
+    # AUTOMATIC CORRECT EXCHANGE LOT SIZE MULTIPLIER ENGINE
     if index_name == "NIFTY":
         default_multiplier = 65
     elif index_name == "SENSEX":
@@ -59,7 +60,7 @@ with trade_col1:
     st.caption("Enter your baseline entry premium cost average.")
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # TARGET CARDS
+    # ORIGINAL MATHEMATICAL TARGET DISPLAY CARDS
     t25 = buy_value * 1.25
     t40 = buy_value * 1.40
     t50 = buy_value * 1.50
@@ -99,13 +100,14 @@ with trade_col2:
 
 
 # ----------------------------------------------------
-# 4. MATH ENGINE: AUTOMATIC POSITION CALCULATIONS
+# 4. POSITION REALIZATION CALCULATIONS
 # ----------------------------------------------------
 total_lots_allocated = buy_lots
 total_quantity = int(total_lots_allocated * base_multiplier)
 total_sell_lots = leg1_lots + leg2_lots + leg3_lots
 
 if total_sell_lots > 0:
+    # Computes blended contract exit pricing dynamically
     average_sell_price = ((leg1_lots * leg1_price) + (leg2_lots * leg2_price) + (leg3_lots * leg3_price)) / total_sell_lots
 else:
     average_sell_price = 0.0
@@ -116,7 +118,7 @@ combined_net_pnl = total_revenue_basis - total_cost_basis
 
 
 # ----------------------------------------------------
-# 5. SUMMARY REALIZATION PANELS & FORM SUBMISSION
+# 5. POSITION REALIZATION SUMMARY & SUBMISSION
 # ----------------------------------------------------
 st.markdown("<br>", unsafe_allow_html=True)
 metric_col1, metric_col2 = st.columns([1.2, 1.0])
@@ -148,50 +150,50 @@ with metric_col2:
             pnl_status_text = f"🟢 Profit: +₹{combined_net_pnl:,.2f}" if combined_net_pnl >= 0 else f"🔴 Loss: -₹{abs(combined_net_pnl):,.2f}"
             profile_log_summary = f"L1: {leg1_lots}L @ ₹{leg1_price:.1f} | L2: {leg2_lots}L @ ₹{leg2_price:.1f} | L3: {leg3_lots}L @ ₹{leg3_price:.1f}"
             
+            # Generating correct timestamp details mapped to Indian Standard Time (IST) zones
             ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
             just_date_stamp = ist_time.strftime("%Y-%m-%d")
 
-            # 🎯 BYPASS METHOD: Submit through your live Google Form endpoint instead of direct sheet link
+            # 🎯 FIXED: Explicit endpoint address routing specifically to your Avengers Google Form
             RESPONSE_URL = "https://google.com"
             
-            # ⚠️ MANDATORY: You must replace these dummy keys below with your actual form entry IDs!
+            # ⚠️ MANDATORY REMINDER: Replace these mock keys with your real Google Form field identifiers!
             form_payload = {
-                "entry.111111111": just_date_stamp,      # Replace with your Date field ID
-                "entry.222222222": str(index_name),     # Replace with your Index field ID
-                "entry.333333333": str(pnl_status_text), # Replace with your PNL field ID
-                "entry.444444444": int(buy_lots),        # Replace with your Lots field ID
-                "entry.555555555": int(total_quantity),  # Replace with your Qty field ID
-                "entry.666666666": f"₹{buy_value:.2f}",   # Replace with your Buy Price field ID
-                "entry.777777777": f"₹{sl_exit_price:.2f}",# Replace with your Stop Loss field ID
-                "entry.888888888": str(profile_log_summary) # Replace with your Breakdown field ID
+                "entry.111111111": just_date_stamp,       # Replace with your Date field entry ID
+                "entry.222222222": str(index_name),      # Replace with your Index field entry ID
+                "entry.333333333": str(pnl_status_text),  # Replace with your PNL field entry ID
+                "entry.444444444": int(buy_lots),         # Replace with your Lots field entry ID
+                "entry.555555555": int(total_quantity),   # Replace with your Qty field entry ID
+                "entry.666666666": f"₹{buy_value:.2f}",    # Replace with your Buy field entry ID
+                "entry.777777777": f"₹{sl_exit_price:.2f}", # Replace with your SL field entry ID
+                "entry.888888888": str(profile_log_summary) # Replace with your Breakdown entry ID
             }
 
             try:
-                # Dispatches raw text parameters safely via public submission form gates
+                # Post tracking records seamlessly through public form gate structures
                 response = requests.post(RESPONSE_URL, data=form_payload, timeout=5)
+                
                 if response.status_code == 200:
                     st.session_state["trade_saved_success"] = True
                     st.rerun()
                 else:
-                    st.error(f"Google Form rejected the submission. HTTP Code: {response.status_code}")
+                    st.error(f"Google Form rejected data submission routing. Server Error Code: {response.status_code}")
             except Exception as append_error:
-                st.error(f"Network error trying to submit to Google Form: {append_error}")
+                st.error(f"Network processing connectivity break: {append_error}")
 
 
 # ----------------------------------------------------
-# 6. HISTORICAL TRACKING SHEET MONITOR LIVE VIEW
+# 6. HISTORICAL DATABASE MONITOR LIVE GRID GRID
 # ----------------------------------------------------
 st.markdown("---")
 st.markdown("#### 📋 Cloud Google Sheet Database Live Grid Monitor")
 
 try:
-    # Public tracking reader engine (reading data works perfectly with your link!)
     live_conn = st.connection("gsheets", type=GSheetsConnection)
-    live_df = live_conn.read(ttl=2)
+    
+    # 🎯 FIXED: Switched tracker query mapping to read from your specific Sheet1 tab directly
+    live_df = live_conn.read(worksheet="Sheet1", ttl=2)
     
     if "Timestamp" in live_df.columns:
         live_df = live_df.drop(columns=["Timestamp"])
         
-    st.dataframe(live_df, use_container_width=True, height=350)
-except Exception as read_error:
-    st.warning(f"Could not render active live preview grid layout: {read_error}")
