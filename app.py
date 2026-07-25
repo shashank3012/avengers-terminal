@@ -32,7 +32,6 @@ st.markdown("<br>", unsafe_allow_html=True)
 # ----------------------------------------------------
 # 3. ORIGINAL TWO-COLUMN SYSTEM: BUY SIDE VS. SELL SIDE
 # ----------------------------------------------------
-# Enforces the layout framework back onto your true original structural column split
 trade_col1, trade_col2 = st.columns(2)
 
 with trade_col1:
@@ -154,10 +153,10 @@ with metric_col2:
             ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
             just_date_stamp = ist_time.strftime("%Y-%m-%d")
 
-            # 🎯 FIXED: Explicit endpoint address routing specifically to your Avengers Google Form
+            # 🎯 FIXED PATH DESTINATION URL
             RESPONSE_URL = "https://google.com"
             
-            # ⚠️ MANDATORY REMINDER: Replace these mock keys with your real Google Form field identifiers!
+            # ⚠️ MANDATORY REMINDER: Replace these entry codes with your real Google Form field entry numbers
             form_payload = {
                 "entry.111111111": just_date_stamp,       # Replace with your Date field entry ID
                 "entry.222222222": str(index_name),      # Replace with your Index field entry ID
@@ -175,6 +174,7 @@ with metric_col2:
                 
                 if response.status_code == 200:
                     st.session_state["trade_saved_success"] = True
+                    st.topic_sync = True
                     st.rerun()
                 else:
                     st.error(f"Google Form rejected data submission routing. Server Error Code: {response.status_code}")
@@ -183,7 +183,7 @@ with metric_col2:
 
 
 # ----------------------------------------------------
-# 6. HISTORICAL DATABASE MONITOR LIVE GRID GRID
+# 6. HISTORICAL DATABASE MONITOR LIVE GRID VIEW
 # ----------------------------------------------------
 st.markdown("---")
 st.markdown("#### 📋 Cloud Google Sheet Database Live Grid Monitor")
@@ -191,9 +191,11 @@ st.markdown("#### 📋 Cloud Google Sheet Database Live Grid Monitor")
 try:
     live_conn = st.connection("gsheets", type=GSheetsConnection)
     
-    # 🎯 FIXED: Switched tracker query mapping to read from your specific Sheet1 tab directly
+    # Switched tracker query mapping to read from your specific Sheet1 tab directly
     live_df = live_conn.read(worksheet="Sheet1", ttl=2)
     
     if "Timestamp" in live_df.columns:
         live_df = live_df.drop(columns=["Timestamp"])
         
+    st.dataframe(live_df, use_container_width=True, height=350)
+except Exception as read_error:
