@@ -8,7 +8,7 @@ from streamlit_gsheets import GSheetsConnection
 # 1. INITIAL SETUP & SYSTEM CONFIGURATIONS
 # ----------------------------------------------------
 st.set_page_config(
-    page_title="Avengers Position Monitor Dashboard",
+    page_title="Mission",
     page_icon="🛡️",
     layout="wide"
 )
