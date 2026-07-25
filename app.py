@@ -154,7 +154,7 @@ with metric_col2:
             just_date_stamp = ist_time.strftime("%Y-%m-%d")
 
             # FIXED PATH DESTINATION URL
-            RESPONSE_URL = "https://docs.google.com/spreadsheets/d/1jQyL9uLBFuTI8OxYBK8YaLwr3ZUpUJtNpKcyDR_vkqA/edit?usp=sharing/"
+            RESPONSE_URL = "https://docs.google.com/spreadsheets/d/1jQyL9uLBFuTI8OxYBK8YaLwr3ZUpUJtNpKcyDR_vkqA/edit?usp=sharing"
             
             # ⚠️ MANDATORY REMINDER: Replace these entry codes with your real Google Form field entry numbers
             form_payload = {
