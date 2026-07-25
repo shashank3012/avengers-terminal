@@ -142,7 +142,16 @@ with metric_col1:
 with metric_col2:
     st.markdown("<br><br>", unsafe_allow_html=True)
     
-    if st.button("💾 Append & Save Trade Row to Cloud Google Sheet", use_container_width=True, type="primary"):
+    # Structural Action Button Layout Split
+    action_col1, action_col2 = st.columns(2)
+    
+    with action_col1:
+        commit_btn = st.button("💾 Append & Save Trade", use_container_width=True, type="primary")
+    with action_col2:
+        clear_btn = st.button("🗑️ Clear Sheet Data", use_container_width=True, type="secondary")
+        
+    # --- SAVE TO SHEET INTERFACE ENGINE ---
+    if commit_btn:
         if total_sell_lots != total_lots_allocated:
             st.error(f"Allocation Mismatch: Your leg lots summary ({total_sell_lots}) must equal your main Lots Count ({total_lots_allocated}).")
         else:
@@ -152,46 +161,50 @@ with metric_col2:
             ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
             just_date_stamp = ist_time.strftime("%Y-%m-%d")
 
-            # 🎯 DIRECT LINK APPROACH: Directly editing via the Google Apps Script Webhook pipeline 
-            # This directly appends to your exact columns (Date, Index, pnl, lots, qty, buy, sl, breakdown)
-            # 🎯 FIXED: Points straight to your unique Google Apps Script macro tunnel
+            # Google Apps Script Webhook pipeline 
             WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwz3qk16sYlMA22f6YlcEIyQxmPaYVeWUWWBz0lKLnDUSY9_29Z82190nw83LdoUllO0g/exec"
-
             
-            trade_payload = {
-                "Date": just_date_stamp,
-                "Index": str(index_name),
-                "pnl": str(pnl_status_text),
-                "lots": int(buy_lots),
+            # Map request params matching your Google Apps Script properties engine expectations
+            payload = {
+                "date": just_date_stamp,
+                "index": index_name,
+                "pnl": float(combined_net_pnl),
+                "lots": int(total_lots_allocated),
                 "qty": int(total_quantity),
-                "buy": f"₹{buy_value:.2f}",
-                "sl": f"₹{sl_exit_price:.2f}",
-                "breakdown": str(profile_log_summary)
+                "buy": float(buy_value),
+                "sl": float(sl_exit_price),
+                "breakdown": profile_log_summary
             }
-
+            
             try:
-                response = requests.post(WEBHOOK_URL, json=trade_payload, timeout=8)
-                st.session_state["trade_saved_success"] = True
-                st.rerun()
-            except Exception as append_error:
-                # If macro connection initializes first run setup, clear cache and save anyway
-                st.session_state["trade_saved_success"] = True
-                st.rerun()
+                # Dispatches transaction payload seamlessly to the cloud macro
+                response = requests.post(WEBHOOK_URL, json=payload, timeout=10)
+                if response.status_code == 200 or "success" in response.text.lower():
+                    st.session_state["trade_saved_success"] = True
+                    st.cache_data.clear()
+                    st.rerun()
+                else:
+                    st.error(f"Web App responded with an error text sequence: {response.text}")
+            except Exception as e:
+                st.error(f"Failed transmission over the automated webhook pipeline: {e}")
 
-
-# ----------------------------------------------------
-# 6. HISTORICAL DATABASE MONITOR LIVE GRID VIEW
-# ----------------------------------------------------
-st.markdown("---")
-st.markdown("#### 📋 Cloud Google Sheet Database Live Grid Monitor")
-
-try:
-    live_conn = st.connection("gsheets", type=GSheetsConnection)
-    live_df = live_conn.read(ttl=1)
-    
-    if "Timestamp" in live_df.columns:
-        live_df = live_df.drop(columns=["Timestamp"])
-        
-    st.dataframe(live_df, use_container_width=True, height=350)
-except Exception as read_error:
-    st.warning(f"Could not render active live preview grid layout: {read_error}")
+    # --- WIPE / CLEAR WORKSHEET ENGINE ---
+    if clear_btn:
+        try:
+            # Connect directly via native gsheets layer definitions
+            conn = st.connection("gsheets", type=GSheetsConnection)
+            
+            # Create a clean dataframe schema block mimicking your exact columns to clear tracking logs rows safely
+            clean_schema_df = pd.DataFrame(columns=[
+                "Date", "Index", "pnl", "lots", "qty", "buy", "sl", "breakdown"
+            ])
+            
+            # Flush existing spreadsheet contents instantly by writing empty header layouts
+            conn.update(worksheet="Trades", data=clean_schema_df)
+            
+            # Force downstream components to bypass caching models 
+            st.cache_data.clear()
+            st.toast("🧹 Sheet data records wiped clean! Ready for new entries.", icon="ℹ️")
+            st.rerun()
+            
+        except Exception as e:
