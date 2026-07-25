@@ -208,3 +208,4 @@ with metric_col2:
             st.rerun()
             
         except Exception as e:
+            st.error(f"Database reset action failed: {e}. Check if worksheet name matches 'Trades' exactly.")
