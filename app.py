@@ -190,8 +190,7 @@ st.markdown("#### 📋 Cloud Google Sheet Database Live Grid Monitor")
 try:
     live_conn = st.connection("gsheets", type=GSheetsConnection)
     
-    # 🎯 BYPASS FIX: Completely removed explicit text worksheet names.
-    # This instructs the platform to fetch your primary tab layout directly without name-match rejections.
+    # BYPASS FIX: Completely removed worksheet="" names to bypass name-match rejections
     live_df = live_conn.read(ttl=2)
     
     if "Timestamp" in live_df.columns:
@@ -199,3 +198,4 @@ try:
         
     st.dataframe(live_df, use_container_width=True, height=350)
 except Exception as read_error:
+    st.warning(f"Could not render active live preview grid layout: {read_error}")
