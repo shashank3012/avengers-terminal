@@ -151,7 +151,7 @@ with metric_col2:
         clear_btn = st.button("🗑️ Clear Sheet Data", use_container_width=True, type="secondary")
         
     # Fixed direct transmission macro tunnel endpoint
-    WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwz3qk16sYlMA22f6YlcEIyQxmPaYVeWUWWBz0lKLnDUSY9_29Z82190nw83LdoUllO0g/exec"
+    WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzO0qab0Mw-eM-hGeiVs4ImXUgYIHyOhC8tRIditY42Y6Bg3Ey2EiHGsXe9RoNuzDxWbA/exec"
 
     # --- SAVE TO SHEET INTERFACE ENGINE ---
     if commit_btn:
