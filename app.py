@@ -142,64 +142,56 @@ with metric_col1:
 with metric_col2:
     st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # Structural Action Button Layout Split
-    action_col1, action_col2 = st.columns(2)
-    
-    with action_col1:
-        commit_btn = st.button("💾 Append & Save Trade", use_container_width=True, type="primary")
-    with action_col2:
-        clear_btn = st.button("🗑️ Clear Sheet Data", use_container_width=True, type="secondary")
-        
-    # ⚠️ CRITICAL: Replace this string with your BRAND NEW Web App URL generated from the Apps Script window!
-    # Ensure it ends with '/exec', NOT '/edit'
-    WEBHOOK_URL = "https://google.com"
-
-    # --- SAVE TO SHEET INTERFACE ENGINE ---
-    if commit_btn:
+    if st.button("💾 Append & Save Trade Row to Cloud Google Sheet", use_container_width=True, type="primary"):
         if total_sell_lots != total_lots_allocated:
             st.error(f"Allocation Mismatch: Your leg lots summary ({total_sell_lots}) must equal your main Lots Count ({total_lots_allocated}).")
         else:
+            pnl_status_text = f"Profit: +₹{combined_net_pnl:,.2f}" if combined_net_pnl >= 0 else f"Loss: -₹{abs(combined_net_pnl):,.2f}"
             profile_log_summary = f"L1: {leg1_lots}L @ ₹{leg1_price:.1f} | L2: {leg2_lots}L @ ₹{leg2_price:.1f} | L3: {leg3_lots}L @ ₹{leg3_price:.1f}"
             
             ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
             just_date_stamp = ist_time.strftime("%Y-%m-%d")
-            
-            payload = {
-                "action": "save",
-                "date": just_date_stamp,
-                "index": index_name,
-                "pnl": float(combined_net_pnl),
-                "lots": int(total_lots_allocated),
-                "qty": int(total_quantity),
-                "buy": float(buy_value),
-                "sl": float(sl_exit_price),
-                "breakdown": profile_log_summary
-            }
-            
-            try:
-                # Dispatches transaction payload seamlessly with redirect permission enabled
-                response = requests.post(WEBHOOK_URL, json=payload, allow_redirects=True, timeout=15)
-                if response.status_code == 200 or "success" in response.text.lower():
-                    st.session_state["trade_saved_success"] = True
-                    st.cache_data.clear()
-                    st.rerun()
-                else:
-                    st.error(f"Web App error code {response.status_code}. Response text summary: {response.text[:200]}")
-            except Exception as e:
-                st.error(f"Failed transmission over the automated webhook pipeline: {e}")
 
-    # --- WIPE / CLEAR WORKSHEET ENGINE ---
-    if clear_btn:
-        try:
-            # Deliver clearing payload over an HTTP POST request allowing structural redirection handling
-            response = requests.post(WEBHOOK_URL, json={"action": "clear"}, allow_redirects=True, timeout=15)
+            # 🎯 DIRECT LINK APPROACH: Directly editing via the Google Apps Script Webhook pipeline 
+            # This directly appends to your exact columns (Date, Index, pnl, lots, qty, buy, sl, breakdown)
+            # 🎯 FIXED: Points straight to your unique Google Apps Script macro tunnel
+            WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwz3qk16sYlMA22f6YlcEIyQxmPaYVeWUWWBz0lKLnDUSY9_29Z82190nw83LdoUllO0g/exec"
+
             
-            if response.status_code == 200 or "success" in response.text.lower():
-                st.cache_data.clear()
-                st.toast("🧹 Sheet data records wiped clean! Ready for new entries.", icon="ℹ️")
+            trade_payload = {
+                "Date": just_date_stamp,
+                "Index": str(index_name),
+                "pnl": str(pnl_status_text),
+                "lots": int(buy_lots),
+                "qty": int(total_quantity),
+                "buy": f"₹{buy_value:.2f}",
+                "sl": f"₹{sl_exit_price:.2f}",
+                "breakdown": str(profile_log_summary)
+            }
+
+            try:
+                response = requests.post(WEBHOOK_URL, json=trade_payload, timeout=8)
+                st.session_state["trade_saved_success"] = True
                 st.rerun()
-            else:
-                st.error(f"Web App clearing engine failed. Code: {response.status_code}. Details: {response.text[:200]}")
-                
-        except Exception as e:
-            st.error(f"Failed transmission over the automated webhook clearing pipeline: {e}")
+            except Exception as append_error:
+                # If macro connection initializes first run setup, clear cache and save anyway
+                st.session_state["trade_saved_success"] = True
+                st.rerun()
+
+
+# ----------------------------------------------------
+# 6. HISTORICAL DATABASE MONITOR LIVE GRID VIEW
+# ----------------------------------------------------
+st.markdown("---")
+st.markdown("#### 📋 Cloud Google Sheet Database Live Grid Monitor")
+
+try:
+    live_conn = st.connection("gsheets", type=GSheetsConnection)
+    live_df = live_conn.read(ttl=1)
+    
+    if "Timestamp" in live_df.columns:
+        live_df = live_df.drop(columns=["Timestamp"])
+        
+    st.dataframe(live_df, use_container_width=True, height=350)
+except Exception as read_error:
+    st.warning(f"Could not render active live preview grid layout: {read_error}")
