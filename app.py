@@ -150,7 +150,7 @@ with metric_col2:
     with action_col2:
         clear_btn = st.button("🗑️ Clear Sheet Data", use_container_width=True, type="secondary")
         
-    # Standard Webhook URL for both save and clear events
+    # Fixed direct transmission macro tunnel endpoint
     WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwz3qk16sYlMA22f6YlcEIyQxmPaYVeWUWWBz0lKLnDUSY9_29Z82190nw83LdoUllO0g/exec"
 
     # --- SAVE TO SHEET INTERFACE ENGINE ---
@@ -158,13 +158,12 @@ with metric_col2:
         if total_sell_lots != total_lots_allocated:
             st.error(f"Allocation Mismatch: Your leg lots summary ({total_sell_lots}) must equal your main Lots Count ({total_lots_allocated}).")
         else:
-            pnl_status_text = f"Profit: +₹{combined_net_pnl:,.2f}" if combined_net_pnl >= 0 else f"Loss: -₹{abs(combined_net_pnl):,.2f}"
             profile_log_summary = f"L1: {leg1_lots}L @ ₹{leg1_price:.1f} | L2: {leg2_lots}L @ ₹{leg2_price:.1f} | L3: {leg3_lots}L @ ₹{leg3_price:.1f}"
             
             ist_time = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
             just_date_stamp = ist_time.strftime("%Y-%m-%d")
             
-            # Map request params matching your Google Apps Script properties engine expectations
+            # Formulate structured JSON payload matching the macro properties key engine exactly
             payload = {
                 "action": "save",
                 "date": just_date_stamp,
@@ -192,10 +191,10 @@ with metric_col2:
     # --- WIPE / CLEAR WORKSHEET ENGINE ---
     if clear_btn:
         try:
-            # Deliver a structured clearing flag payload over an HTTP POST request 
+            # Deliver a structured clearing flag payload over an HTTP POST request to bypass read-only locks
             response = requests.post(WEBHOOK_URL, json={"action": "clear"}, timeout=15)
             
-            # Check for a valid execution response back from your App Script server
+            # Check for a valid execution response back from your Apps Script server
             if response.status_code == 200 or "success" in response.text.lower():
                 # Force local application state to drop stale views
                 st.cache_data.clear()
